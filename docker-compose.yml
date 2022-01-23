@@ -1,0 +1,32 @@
+version: "3.8"
+services:
+  postgres:
+    image: postgres:13.1
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: admin
+      POSTGRES_PASSWORD: example
+    volumes:
+      - ./target/stack-files/postgres/db:/var/lib/postgresql/data
+      - ./stack-files/postgres:/docker-entrypoint-initdb.d
+  keycloak:
+    image: jboss/keycloak:15.0.2
+    environment:
+      - KEYCLOAK_USER=admin
+      - KEYCLOAK_PASSWORD=example
+      - KEYCLOAK_IMPORT=/config/keycloak/sandbox-keycloak.json
+      - DB_VENDOR=POSTGRES
+      - DB_ADDR=postgres
+      - DB_USER=keycloak
+      - DB_PASSWORD=keycloak
+    ports:
+      - 8081:8080
+      - 9990:9990
+    volumes:
+      - ./target/stack-files/keycloak:/work/keycloak
+      - ./stack-files/keycloak/config:/config/keycloak:ro
+      - ./stack-files/keycloak/standalone/mgmt-users.properties:/opt/jboss/keycloak/standalone/configuration/mgmt-users.properties:ro
+      - ./stack-files/keycloak/standalone/mgmt-groups.properties:/opt/jboss/keycloak/standalone/configuration/mgmt-groups.properties:ro
+    depends_on:
+      - postgres
